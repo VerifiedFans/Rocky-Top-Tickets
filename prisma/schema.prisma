@@ -1,1 +1,103 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
 
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  sections    Section[]
+  days        EventDay[]
+}
+
+model EventDay {
+  id        String   @id @default(uuid())
+  date      DateTime
+  name      String   
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  tickets   Ticket[]
+}
+
+model Section {
+  id          String   @id @default(uuid())
+  name        String   
+  type        String   
+  description String?
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id])
+  rows        SectionRow[]
+}
+
+model SectionRow {
+  id        String   @id @default(uuid())
+  rowNumber Int
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id])
+  seats     Seat[]
+}
+
+model Seat {
+  id          String   @id @default(uuid())
+  seatNumber  Int
+  rowId       String
+  row         SectionRow @relation(fields: [rowId], references: [id])
+  available   Boolean  @default(true)
+  price       Float
+  threeDay    Boolean  @default(false) 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  reservations ReservedSeat[]
+  tickets     Ticket[]
+}
+
+model Reservation {
+  id                String   @id @default(uuid())
+  email             String
+  name              String?
+  phone             String?
+  status            String  
+  totalAmount       Float
+  expiresAt         DateTime
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  paidAt            DateTime?
+  paymentId         String?  
+  checkoutSessionId String?  
+  reservedSeats     ReservedSeat[]
+  tickets           Ticket[]
+}
+
+model ReservedSeat {
+  id            String   @id @default(uuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  seatId        String
+  seat          Seat     @relation(fields: [seatId], references: [id])
+  createdAt     DateTime @default(now())
+}
+
+model Ticket {
+  id            String   @id @default(uuid())
+  ticketCode    String   @unique
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  seatId        String
+  seat          Seat     @relation(fields: [seatId], references: [id])
+  eventDayId    String?  
+  eventDay      EventDay? @relation(fields: [eventDayId], references: [id])
+  status        String  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  usedAt        DateTime?
+}
