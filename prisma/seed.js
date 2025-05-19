@@ -2,6 +2,15 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
+const GA_ROWS = 32;
+const GA_SEATS = 12;
+const VIP_LAYOUT = {
+  "101": [3, 5, 7, 9, 11, 13, 15, 17, 17, 14, 12, 11, 9],
+  "102": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+  "103": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+  "104": [3, 5, 7, 9, 11, 13, 15, 17, 17, 14, 12, 11, 9]
+};
+
 async function main() {
   console.log('Starting seed...');
 
@@ -10,8 +19,8 @@ async function main() {
     data: {
       name: "Annual Festival 2025",
       description: "Our signature three-day festival with performances, activities, and more!",
-      startDate: new Date("2025-06-26T10:00:00Z"), // Thursday
-      endDate: new Date("2025-06-28T23:00:00Z"),   // Saturday
+      startDate: new Date("2025-06-26T10:00:00Z"),
+      endDate: new Date("2025-06-28T23:00:00Z"),
     }
   });
 
@@ -20,39 +29,26 @@ async function main() {
   // Create event days
   const days = await Promise.all([
     prisma.eventDay.create({
-      data: {
-        name: "Thursday",
-        date: new Date("2025-06-26T10:00:00Z"),
-        eventId: event.id
-      }
+      data: { name: "Thursday", date: new Date("2025-06-26T10:00:00Z"), eventId: event.id }
     }),
     prisma.eventDay.create({
-      data: {
-        name: "Friday",
-        date: new Date("2025-06-27T10:00:00Z"),
-        eventId: event.id
-      }
+      data: { name: "Friday", date: new Date("2025-06-27T10:00:00Z"), eventId: event.id }
     }),
     prisma.eventDay.create({
-      data: {
-        name: "Saturday",
-        date: new Date("2025-06-28T10:00:00Z"),
-        eventId: event.id
-      }
+      data: { name: "Saturday", date: new Date("2025-06-28T10:00:00Z"), eventId: event.id }
     })
   ]);
 
   console.log('Created event days');
 
-  // Create VIP sections
-  const vipSectionNames = ["101", "102", "103", "104"];
+  // 🏷️ Create VIP Sections
   const vipSections = await Promise.all(
-    vipSectionNames.map(name =>
+    ["101", "102", "103", "104"].map(name =>
       prisma.section.create({
         data: {
           name,
           type: "VIP",
-          description: "VIP section with premium view and 3-day access",
+          description: `VIP section ${name}`,
           eventId: event.id
         }
       })
@@ -61,43 +57,25 @@ async function main() {
 
   console.log('Created VIP sections');
 
-  // Create GA sections
-  const gaSectionNames = ["201", "202", "203", "204"];
-  const gaSections = await Promise.all(
-    gaSectionNames.map(name =>
-      prisma.section.create({
-        data: {
-          name,
-          type: "GA",
-          description: "General Admission section",
-          eventId: event.id
-        }
-      })
-    )
-  );
-
-  console.log('Created GA sections');
-
-  // Create VIP rows and seats
+  // 🚀 Create VIP Rows and Seats
   for (const section of vipSections) {
     console.log(`Creating rows and seats for VIP section ${section.name}...`);
-    
-    for (let rowNum = 1; rowNum <= 15; rowNum++) {
-      const seatsInRow = 10 + Math.floor(rowNum * 1.5);
-      
+    const layout = VIP_LAYOUT[section.name];
+    for (let i = 0; i < layout.length; i++) {
+      const rowName = String.fromCharCode(65 + i); // A, B, C...
       const row = await prisma.sectionRow.create({
         data: {
-          rowNumber: rowNum,
+          rowNumber: i + 1,
           sectionId: section.id,
         }
       });
 
       const seatPromises = [];
-      for (let seatNum = 1; seatNum <= seatsInRow; seatNum++) {
+      for (let seatNum = 1; seatNum <= layout[i]; seatNum++) {
         seatPromises.push(
           prisma.seat.create({
             data: {
-              seatNumber: seatNum,
+              seatNumber: section.name === "101" || section.name === "104" ? layout[i] - seatNum + 1 : seatNum,
               rowId: row.id,
               price: 135,
               threeDay: true,
@@ -112,20 +90,36 @@ async function main() {
 
   console.log('Created VIP rows and seats');
 
-  // Create GA rows and seats
+  // 🏷️ Create GA Sections
+  const gaSections = await Promise.all(
+    ["201", "202", "203", "204"].map(name =>
+      prisma.section.create({
+        data: {
+          name,
+          type: "GA",
+          description: "General Admission section",
+          eventId: event.id
+        }
+      })
+    )
+  );
+
+  console.log('Created GA sections');
+
+  // 🚀 Create GA Rows and Seats
   for (const section of gaSections) {
     console.log(`Creating rows and seats for GA section ${section.name}...`);
-    
-    for (let rowNum = 1; rowNum <= 30; rowNum++) {
+    for (let rowNum = 0; rowNum < GA_ROWS; rowNum++) {
+      const rowName = String.fromCharCode(65 + rowNum);
       const row = await prisma.sectionRow.create({
         data: {
-          rowNumber: rowNum,
+          rowNumber: rowNum + 1,
           sectionId: section.id,
         }
       });
 
       const seatPromises = [];
-      for (let seatNum = 1; seatNum <= 15; seatNum++) {
+      for (let seatNum = 1; seatNum <= GA_SEATS; seatNum++) {
         seatPromises.push(
           prisma.seat.create({
             data: {
