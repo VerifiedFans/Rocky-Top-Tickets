@@ -1,6 +1,32 @@
 name: Push Prisma Schema to Neon
 
 on:
+  workflow_dispatch:  # This enables manual "Run workflow" button in GitHub Actions
+
+jobs:
+  db-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Push Prisma Schema to Neon
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma db push
+: Push Prisma Schema to Neon
+
+on:
   workflow_dispatch:
 
 jobs:
