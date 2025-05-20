@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -19,12 +19,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Prisma Generate
+      - name: Prisma generate
         run: npx prisma generate
 
       - name: Push schema
-        run: |
-          echo "Pushing schema to Neon..."
-          npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma db push
