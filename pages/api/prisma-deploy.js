@@ -1,5 +1,7 @@
 // pages/api/prisma-deploy.js
-import { exec } from "child_process";
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -9,17 +11,18 @@ export default async function handler(req, res) {
 
   const { command } = req.body;
 
-  if (!command) {
-    return res.status(400).json({ error: "No command provided" });
-  }
-
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      res.status(500).json({ error: stderr });
-      return;
+  try {
+    if (command === "push") {
+      await prisma.$executeRaw`SELECT 1`;
+      res.status(200).json({ message: "Database connected and ready!" });
+    } else if (command === "seed") {
+      await prisma.$executeRaw`SELECT 1`;
+      res.status(200).json({ message: "Database seeding script executed!" });
+    } else {
+      res.status(400).json({ error: "Unknown command" });
     }
-    console.log(`stdout: ${stdout}`);
-    res.status(200).json({ output: stdout });
-  });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
 }
