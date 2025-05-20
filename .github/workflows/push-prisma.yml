@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  db-push:
+  push-db:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -19,10 +19,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate Prisma Client
+      - name: Prisma Generate
         run: npx prisma generate
 
-      - name: Push Prisma Schema to Neon
-        run: npx prisma db push
+      - name: Push schema
+        run: |
+          echo "Pushing schema to Neon..."
+          npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
