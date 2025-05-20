@@ -22,7 +22,7 @@ jobs:
       - name: Prisma generate
         run: npx prisma generate
 
-      - name: Push schema
+           - name: Push schema
+        run: npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: npx prisma db push
