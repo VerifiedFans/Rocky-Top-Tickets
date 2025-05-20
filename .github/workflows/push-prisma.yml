@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -23,6 +23,6 @@ jobs:
         run: npx prisma generate
 
       - name: Push schema
-        run: npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma db push
