@@ -19,10 +19,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate Prisma Client
+      - name: Prisma generate
         run: npx prisma generate
 
-      - name: Push schema to Neon
+      - name: Push schema
         run: npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
