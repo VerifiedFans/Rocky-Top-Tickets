@@ -1,19 +1,23 @@
-// pages/api/push-schema.js
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    // Prisma logic here
-    const { exec } = require('child_process');
-    exec('npx prisma db push', (error, stdout, stderr) => {
-      if (error) {
-        return res.status(500).json({ error: stderr });
-      }
-      return res.status(200).json({ message: 'Schema pushed!', output: stdout });
-    });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+    const { exec } = await import('child_process');
+    const util = await import('util');
+    const execProm = util.promisify(exec);
+
+    const { stdout, stderr } = await execProm('npx prisma db push');
+
+    if (stderr) {
+      console.error(stderr);
+      return res.status(500).json({ error: 'Prisma error', details: stderr });
+    }
+
+    return res.status(200).json({ message: 'Schema pushed!', output: stdout });
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return res.status(500).json({ error: 'Unexpected error', details: error.message });
   }
 }
