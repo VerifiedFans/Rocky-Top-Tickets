@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -19,10 +19,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate Prisma client
+      - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Push schema to Neon
-        run: npx prisma db push --force-reset
+      - name: Push Prisma Schema to Neon
+        run: |
+          echo "Pushing Prisma schema to Neon..."
+          npx prisma db push
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
